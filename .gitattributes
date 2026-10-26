@@ -1,0 +1,14 @@
+* text=auto
+*.cs text eol=lf
+*.csproj text eol=lf
+*.props text eol=lf
+*.xaml text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.m3u8 text eol=crlf
+*.svg text eol=lf
+*.png binary
+*.ico binary
+*.wav binary

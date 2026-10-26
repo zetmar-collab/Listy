@@ -1,0 +1,99 @@
+using System.Text.RegularExpressions;
+
+namespace Listy.Core;
+
+public sealed class Track(string location)
+{
+    public string Location { get; } = location;
+    public bool IsRemote => Uri.TryCreate(Location, UriKind.Absolute, out var uri) && !uri.IsFile;
+    public string Name => IsRemote ? Location : Path.GetFileNameWithoutExtension(Location);
+    public string Format => IsRemote ? "URL" : Path.GetExtension(Location).TrimStart('.').ToUpperInvariant();
+    public string Folder => IsRemote ? "Strumień internetowy" : Path.GetDirectoryName(Location) ?? "";
+    public string State => IsRemote ? "Strumień" : File.Exists(Location) ? "Dostępny" : "Brak pliku";
+}
+
+public record Album(string Directory, IReadOnlyList<Track> Tracks)
+{
+    public string Name => Path.GetFileName(Directory.TrimEnd(Path.DirectorySeparatorChar));
+    public string Description => $"{Tracks.Count} utworów · {Directory}";
+    public override string ToString() => Name;
+}
+
+public record PlaylistFile(string Path)
+{
+    public string Name => System.IO.Path.GetFileName(Path);
+    public string Folder => System.IO.Path.GetDirectoryName(Path) ?? "";
+    public override string ToString() => Name;
+}
+
+public record LibrarySnapshot(string Root, IReadOnlyList<Album> Albums, IReadOnlyList<PlaylistFile> Playlists,
+    IReadOnlyList<string> Warnings)
+{
+    public IReadOnlyList<Track> Tracks => Albums.SelectMany(a => a.Tracks).ToArray();
+}
+
+public static class LibraryScanner
+{
+    public static readonly string[] AudioExtensions = [".mp3", ".flac", ".wav", ".m4a", ".aac", ".ogg", ".opus", ".wma", ".aiff", ".aif", ".ape", ".alac"];
+    public static readonly string[] PlaylistExtensions = [".m3u8", ".m3u", ".pls", ".xspf", ".wpl"];
+
+    public static LibrarySnapshot Scan(string root, bool recursive, CancellationToken token = default)
+    {
+        root = Path.GetFullPath(root);
+        if (!Directory.Exists(root)) throw new DirectoryNotFoundException("Wybrany katalog nie istnieje.");
+        var albums = new List<Album>();
+        var playlists = new List<PlaylistFile>();
+        var warnings = new List<string>();
+        var pending = new Stack<string>();
+        pending.Push(root);
+        while (pending.TryPop(out var folder))
+        {
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                var tracks = new List<Track>();
+                foreach (var file in Directory.EnumerateFiles(folder))
+                {
+                    token.ThrowIfCancellationRequested();
+                    var ext = Path.GetExtension(file);
+                    if (AudioExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) tracks.Add(new(file));
+                    else if (PlaylistExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) playlists.Add(new(file));
+                }
+                if (tracks.Count > 0) albums.Add(new(folder, tracks.OrderBy(t => t.Location, NaturalPathComparer.Instance).ToArray()));
+                if (recursive)
+                    foreach (var child in Directory.EnumerateDirectories(folder))
+                        if ((File.GetAttributes(child) & FileAttributes.ReparsePoint) == 0) pending.Push(child);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                warnings.Add($"{folder}: {ex.Message}");
+            }
+        }
+        return new(root, albums.OrderBy(a => a.Directory, NaturalPathComparer.Instance).ToArray(),
+            playlists.OrderBy(p => p.Path, NaturalPathComparer.Instance).ToArray(), warnings);
+    }
+}
+
+public sealed class NaturalPathComparer : IComparer<string>
+{
+    public static NaturalPathComparer Instance { get; } = new();
+    public int Compare(string? x, string? y)
+    {
+        var left = Regex.Split(x ?? "", "([0-9]+)");
+        var right = Regex.Split(y ?? "", "([0-9]+)");
+        for (var i = 0; i < Math.Min(left.Length, right.Length); i++)
+        {
+            var a = left[i]; var b = right[i];
+            int cmp;
+            if (a.Length > 0 && b.Length > 0 && char.IsAsciiDigit(a[0]) && char.IsAsciiDigit(b[0]))
+            {
+                a = a.TrimStart('0'); b = b.TrimStart('0');
+                cmp = a.Length.CompareTo(b.Length);
+                if (cmp == 0) cmp = string.Compare(a, b, StringComparison.Ordinal);
+            }
+            else cmp = string.Compare(a, b, StringComparison.OrdinalIgnoreCase);
+            if (cmp != 0) return cmp;
+        }
+        return left.Length.CompareTo(right.Length);
+    }
+}

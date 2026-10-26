@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Listy</AssemblyName>
+    <Version>1.0.2</Version>
+    <ApplicationIcon>Assets\Listy.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Listy.Core/Listy.Core.csproj" /></ItemGroup>
+  <ItemGroup><Resource Include="Assets\Listy.ico" /></ItemGroup>
+</Project>

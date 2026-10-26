@@ -1,0 +1,73 @@
+<Window x:Class="Listy.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Listy — studio playlist" Icon="Assets/Listy.ico" Style="{StaticResource {x:Type Window}}" Width="1360" Height="900" MinWidth="1100" MinHeight="740" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+  <Grid>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="245"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Border Background="#172F36">
+      <Grid Margin="22,28,22,22">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel>
+          <TextBlock Text="≋  listy" Foreground="White" FontSize="32" FontWeight="Bold"/>
+          <TextBlock Text="TWOJA MUZYKA. TWOJA KOLEJNOŚĆ." Foreground="#9DB8B1" FontSize="9" Margin="0,8,0,30"/>
+          <TextBlock Text="BIBLIOTEKA" Foreground="#9DB8B1" FontSize="10" FontWeight="Bold" Margin="0,0,0,12"/>
+          <TextBlock x:Name="LibraryLabel" Text="Nie wybrano katalogu" Foreground="White" TextWrapping="Wrap" FontSize="16" FontWeight="SemiBold"/>
+          <TextBlock x:Name="LibraryPath" Text="Wybierz folder ze swoją muzyką, aby rozpocząć." Foreground="#A9C2BB" TextWrapping="Wrap" Margin="0,8,0,18" FontSize="11"/>
+          <Button Content="＋  Wybierz katalog" Click="Browse_Click" Margin="0,0,0,12" Background="#D9EEE1"/>
+          <CheckBox x:Name="Recursive" Content="Wczytaj podkatalogi" IsChecked="True" Foreground="White" Margin="0,0,0,16"/>
+          <StackPanel Orientation="Horizontal"><Button x:Name="ScanButton" Content="Odśwież" Click="Scan_Click" Padding="13,7"/><Button x:Name="CancelButton" Content="Anuluj" Click="Cancel_Click" Padding="13,7" IsEnabled="False"/></StackPanel>
+        </StackPanel>
+        <Border Grid.Row="1" BorderBrush="#355058" BorderThickness="0,1,0,0" Margin="0,24,0,0" Padding="0,18,0,12">
+          <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock x:Name="TrackCount" Text="0" Foreground="White" FontSize="29" FontWeight="SemiBold"/><TextBlock Text="utworów" Foreground="#A9C2BB"/></StackPanel>
+            <StackPanel Grid.Column="1"><TextBlock x:Name="AlbumCount" Text="0" Foreground="White" FontSize="29" FontWeight="SemiBold"/><TextBlock Text="folderów muzyki" Foreground="#A9C2BB" FontSize="11"/></StackPanel>
+          </Grid>
+        </Border>
+        <StackPanel Grid.Row="2" Margin="0,10,0,0"><TextBlock Text="FOLDERY Z MUZYKĄ" Foreground="#9DB8B1" FontSize="10" FontWeight="Bold" Margin="0,0,0,10"/>
+          <ListBox x:Name="AlbumList" Background="Transparent" BorderThickness="0" Foreground="White" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="Album_Changed" MaxHeight="290">
+            <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="2,5" ToolTip="{Binding Directory}"><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Tracks.Count, StringFormat={}{0} utworów}" Foreground="#A9C2BB" FontSize="10" Margin="0,3,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+          </ListBox>
+        </StackPanel>
+        <StackPanel Grid.Row="3"><TextBlock Text="LOKALNIE • BEZ KONTA" Foreground="#9DB8B1" FontSize="10"/><TextBlock Text="Listy 1.0  /  Windows" Foreground="#75938C" FontSize="10" Margin="0,5,0,0"/></StackPanel>
+      </Grid>
+    </Border>
+    <Grid Grid.Column="1" Margin="28,24,28,18">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <Grid Margin="0,0,0,20"><StackPanel><TextBlock Text="Studio playlist" FontSize="29" FontWeight="SemiBold"/><TextBlock Text="Uporządkuj albumy. Ułóż własny zestaw. Zapisz i słuchaj." Foreground="{StaticResource Muted}" Margin="0,6,0,0"/></StackPanel><Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="#E2EDE5" CornerRadius="14" Padding="12,6"><TextBlock Text="●  Twoje pliki pozostają na dysku" Foreground="#25684F" FontSize="11"/></Border></Grid>
+      <TabControl x:Name="Tabs" Grid.Row="1" Background="Transparent" BorderThickness="0">
+        <TabItem Header="Tworzenie automatyczne">
+          <Grid Margin="0,18,0,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Border Style="{StaticResource Card}"><StackPanel>
+              <TextBlock Text="01   Ustawienia playlist" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,14"/>
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="1.3*"/><ColumnDefinition Width="1*"/></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,16,0"><TextBlock Text="Miejsce zapisu" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox x:Name="ModeBox" SelectedIndex="0" SelectionChanged="Options_Changed"><ComboBoxItem Content="Osobno w każdym folderze / albumie"/><ComboBoxItem Content="Jedna lista w katalogu głównym"/><ComboBoxItem Content="Jedna lista w podkatalogu"/></ComboBox></StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,16,0"><TextBlock Text="Nazwa playlisty (bez rozszerzenia)" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><TextBox x:Name="NameBox" Text="Playlista" TextChanged="Options_Changed"/><Border x:Name="AlbumNameHint" Background="#EDF3EF" BorderBrush="#CBD9D2" BorderThickness="1" Padding="10,8" Visibility="Collapsed"><TextBlock Text="Automatycznie: nazwa folderu" TextWrapping="Wrap" ToolTip="Każda playlista otrzyma nazwę katalogu, w którym znajdują się utwory."/></Border></StackPanel>
+                <StackPanel Grid.Column="2"><TextBlock Text="Format zapisu" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox x:Name="FormatBox" SelectedIndex="0" SelectionChanged="Options_Changed"><ComboBoxItem Content="M3U8 · UTF-8"/><ComboBoxItem Content="M3U · UTF-8"/><ComboBoxItem Content="PLS"/><ComboBoxItem Content="XSPF"/><ComboBoxItem Content="WPL"/></ComboBox></StackPanel>
+              </Grid>
+              <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Nazwa podkatalogu (dla jednej listy w podkatalogu)" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><TextBox x:Name="SubfolderBox" Text="Playlisty" TextChanged="Options_Changed" Margin="0,0,16,0"/></StackPanel><StackPanel Grid.Column="1" VerticalAlignment="Bottom"><CheckBox x:Name="RelativeBox" Content="Ścieżki względne — przenośne playlisty" IsChecked="True" Checked="Options_Changed" Unchecked="Options_Changed"/><TextBlock Text="Folder albumu = folder zawierający pliki muzyczne." Foreground="{StaticResource Muted}" FontSize="11"/></StackPanel></Grid>
+              <TextBlock Text="Uwzględnij pliki muzyczne" Foreground="{StaticResource Muted}" Margin="0,16,0,2"/>
+              <WrapPanel x:Name="ExtensionPanel"/>
+            </StackPanel></Border>
+            <Grid Grid.Row="1" Margin="0,20,0,10"><TextBlock Text="02   Podgląd przed zapisem" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/><TextBlock x:Name="PlanSummary" Text="Wybierz katalog z muzyką" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/></Grid>
+            <Border Grid.Row="2" Style="{StaticResource Card}" Padding="0"><Grid><DataGrid x:Name="PlanGrid" SelectionChanged="Plan_Changed" MouseDoubleClick="Plan_DoubleClick"><DataGrid.Columns><DataGridTextColumn Header="PLAYLISTA" Binding="{Binding Name}" Width="1.2*"/><DataGridTextColumn Header="UTWORY" Binding="{Binding Count}" Width="80"/><DataGridTextColumn Header="KATALOG" Binding="{Binding Folder}" Width="2*"/><DataGridTextColumn Header="STATUS" Binding="{Binding State}" Width="1.4*"/></DataGrid.Columns></DataGrid><TextBlock x:Name="PlanEmpty" Text="Wybierz katalog. Tutaj pojawią się playlisty gotowe do utworzenia." Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="22"/></Grid></Border>
+            <Grid Grid.Row="3" Margin="0,14,0,0"><StackPanel Orientation="Horizontal"><Button Content="Podgląd utworów" Click="PlanPreview_Click"/><TextBlock Text="Istniejące pliki są pomijane." Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"/></StackPanel><Button x:Name="GenerateButton" Content="Utwórz playlisty  →" Style="{StaticResource Primary}" HorizontalAlignment="Right" Click="Generate_Click" Margin="0"/></Grid>
+          </Grid>
+        </TabItem>
+        <TabItem Header="Zapisane playlisty">
+          <Grid Margin="0,18,0,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <StackPanel Margin="0,0,0,16"><TextBlock Text="Playlisty w bibliotece" FontSize="21" FontWeight="SemiBold"/><TextBlock Text="Zaznacz listę do podglądu lub kilka list do przeniesienia do Kosza." Foreground="{StaticResource Muted}" Margin="0,6,0,0"/></StackPanel>
+            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="0"><DataGrid x:Name="SavedGrid" SelectionMode="Extended" SelectionChanged="Saved_Changed"><DataGrid.Columns><DataGridTextColumn Header="NAZWA" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="KATALOG" Binding="{Binding Folder}" Width="2*"/></DataGrid.Columns></DataGrid></Border>
+            <WrapPanel Grid.Row="2" Margin="0,16,0,0"><Button Content="Podgląd / edycja" Click="EditSaved_Click"/><Button Content="Otwórz playlistę…" Click="OpenPlaylist_Click"/><Button Content="Zmień nazwę" Click="Rename_Click"/><Button Content="Przenieś do Kosza" Click="Delete_Click" Foreground="#AA3D36"/></WrapPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="Edytor i podgląd">
+          <Grid Margin="0,18,0,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid Margin="0,0,0,14"><StackPanel><TextBlock x:Name="EditorTitle" Text="Twoja własna playlista" FontSize="21" FontWeight="SemiBold"/><TextBlock x:Name="EditorSubtitle" Text="Dodaj utwory lub otwórz istniejącą playlistę." Foreground="{StaticResource Muted}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" MaxWidth="700" HorizontalAlignment="Left"/></StackPanel><TextBlock x:Name="DirtyLabel" Text="Niezapisane zmiany" Foreground="#AC681F" HorizontalAlignment="Right" Visibility="Collapsed"/></Grid>
+            <WrapPanel Grid.Row="1" Margin="0,0,0,12"><Button Content="Nowa lista" Click="New_Click"/><Button Content="Otwórz…" Click="OpenPlaylist_Click"/><Button Content="＋ Dodaj utwory" Click="AddTracks_Click"/><Button Content="Usuń zaznaczone" Click="RemoveTracks_Click"/><Button Content="↑ W górę" Click="Up_Click"/><Button Content="↓ W dół" Click="Down_Click"/></WrapPanel>
+            <TabControl Grid.Row="2" x:Name="PreviewTabs" SelectionChanged="PreviewTab_Changed"><TabItem Header="Utwory"><Grid><DataGrid x:Name="TracksGrid" CanUserSortColumns="False" SelectionMode="Extended" AllowDrop="True" Drop="Tracks_Drop"><DataGrid.Columns><DataGridTextColumn Header="UTWÓR" Binding="{Binding Name}" Width="1.5*"/><DataGridTextColumn Header="FORMAT" Binding="{Binding Format}" Width="80"/><DataGridTextColumn Header="KATALOG / ŹRÓDŁO" Binding="{Binding Folder}" Width="2*"/><DataGridTextColumn Header="PLIK" Binding="{Binding State}" Width="95"/></DataGrid.Columns></DataGrid><TextBlock x:Name="TracksEmpty" Text="Dodaj lub przeciągnij tutaj pliki muzyczne.&#x0a;Utwory zapiszą się w widocznej kolejności." TextAlignment="Center" Foreground="{StaticResource Muted}" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False"/></Grid></TabItem><TabItem Header="Treść pliku"><TextBox x:Name="RawPreview" FontFamily="Consolas" FontSize="12" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/></TabItem></TabControl>
+            <Grid Grid.Row="3" Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock x:Name="EditorCount" Text="0 utworów" FontWeight="SemiBold"/><CheckBox x:Name="EditorRelative" Content="Ścieżki względne" IsChecked="True" Checked="EditorOptions_Changed" Unchecked="EditorOptions_Changed" Margin="0,4,0,0"/></StackPanel><ComboBox Grid.Column="1" x:Name="EditorFormat" SelectedIndex="0" SelectionChanged="EditorOptions_Changed" Margin="0,0,12,0"><ComboBoxItem Content="M3U8 · UTF-8"/><ComboBoxItem Content="M3U · UTF-8"/><ComboBoxItem Content="PLS"/><ComboBoxItem Content="XSPF"/><ComboBoxItem Content="WPL"/></ComboBox><Button Grid.Column="2" Content="Zapisz playlistę…" Style="{StaticResource Primary}" Click="SaveEditor_Click" Margin="0"/></Grid>
+          </Grid>
+        </TabItem>
+      </TabControl>
+      <Border Grid.Row="2" Margin="0,18,0,0" BorderBrush="#D9E3DD" BorderThickness="0,1,0,0" Padding="0,12,0,0"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock x:Name="StatusText" Text="Gotowe. Wybierz katalog lub utwórz ręcznie nową playlistę." Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/><Button Grid.Column="1" Content="Raport" Click="Report_Click" Padding="10,3" Margin="12,0,0,0"/></Grid></Border>
+    </Grid>
+  </Grid>
+</Window>
