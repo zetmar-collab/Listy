@@ -6,7 +6,7 @@ public record PlaylistPlan(string Path, IReadOnlyList<Track> Tracks)
     public string Name => System.IO.Path.GetFileName(Path);
     public string Folder => System.IO.Path.GetDirectoryName(Path) ?? "";
     public int Count => Tracks.Count;
-    public string State => File.Exists(Path) ? "Istnieje — zostanie pominięta" : "Nowa playlista";
+    public string State => File.Exists(Path) ? Text.T("T122") : Text.T("T099");
 }
 
 public static class PlaylistPlanner
@@ -15,11 +15,11 @@ public static class PlaylistPlanner
     {
         if (string.IsNullOrWhiteSpace(name) || name is "." or ".." || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
             || name.EndsWith('.') || name.EndsWith(' ') || name.Length > 180)
-            throw new ArgumentException("Podaj nazwę do 180 znaków, bez znaków: \\ / : * ? \" < > | i bez kropki lub spacji na końcu.");
+            throw new ArgumentException(Text.T("T123"));
         var stem = name.Split('.')[0].ToUpperInvariant();
         if (new[] { "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$" }.Contains(stem)
             || System.Text.RegularExpressions.Regex.IsMatch(stem, @"^(COM|LPT)[1-9¹²³]$"))
-            throw new ArgumentException("Ta nazwa jest zarezerwowana przez Windows.");
+            throw new ArgumentException(Text.T("T124"));
     }
 
     public static IReadOnlyList<PlaylistPlan> Create(LibrarySnapshot library, ISet<string> extensions,
@@ -48,7 +48,7 @@ public static class PlaylistPlanner
         var target = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, name + Path.GetExtension(path));
         if (string.Equals(path, target, StringComparison.Ordinal)) return path;
         if (File.Exists(target) && !string.Equals(path, target, StringComparison.OrdinalIgnoreCase))
-            throw new IOException("Plik o tej nazwie już istnieje.");
+            throw new IOException(Text.T("T125"));
         File.Move(path, target);
         return target;
     }

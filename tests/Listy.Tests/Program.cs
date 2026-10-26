@@ -160,6 +160,69 @@ try
         Assert(PlaylistCodec.Read(path).Single().Location == top);
     });
     Test("Strumień nie jest traktowany jako lokalny plik", () => Assert(tracks[2].IsRemote && tracks[2].State == "Strumień"));
+    Test("Kompletność tłumaczeń i zgodność parametrów", () =>
+    {
+        var pl = Text.Catalog("pl"); var en = Text.Catalog("en");
+        Assert(pl.Keys.Order().SequenceEqual(en.Keys.Order()));
+        foreach (var key in pl.Keys)
+        {
+            Assert(!string.IsNullOrWhiteSpace(en[key]), key);
+            var pattern = @"\{\d+\}";
+            var plArgs = System.Text.RegularExpressions.Regex.Matches(pl[key], pattern).Select(m => m.Value).Order();
+            var enArgs = System.Text.RegularExpressions.Regex.Matches(en[key], pattern).Select(m => m.Value).Order();
+            Assert(plArgs.SequenceEqual(enArgs), key);
+            foreach (var language in new[] { "pl", "en" })
+            {
+                Text.SetLanguage(language);
+                Assert(!Text.T(key, 1, 2, 3, 4).Contains("{0}"), key);
+            }
+        }
+        Text.SetLanguage("pl");
+    });
+    Test("Angielskie statusy, błędy i podsumowania", () =>
+    {
+        try
+        {
+            Text.SetLanguage("en");
+            Assert(tracks[0].State == "Available");
+            Assert(tracks[2].State == "Stream" && tracks[2].Folder == "Internet stream");
+            Assert(tracks[^1].State == "Missing file");
+            Assert(Text.T("T075", 5, 2, 1, 0) == "Loaded tracks: 5, folders: 2, playlists: 1. Skipped folders: 0.");
+            try { PlaylistPlanner.ValidateName("CON"); throw new Exception("Expected validation error"); }
+            catch (ArgumentException ex) { Assert(ex.Message == "This name is reserved by Windows."); }
+            try { PlaylistCodec.Detect("unknown.xyz"); throw new Exception("Expected format error"); }
+            catch (InvalidDataException ex) { Assert(ex.Message == "Unsupported playlist format."); }
+        }
+        finally { Text.SetLanguage("pl"); }
+    });
+    Test("Zmiana języka zachowuje nazwy i zapis playlist", () =>
+    {
+        try
+        {
+            var plPlans = PlaylistPlanner.Create(snapshot, onlyMp3, OutputMode.PerAlbum, PlaylistFormat.M3U8, "", "");
+            var plText = PlaylistCodec.Serialize(tracks, Path.Combine(root, "język.m3u8"), PlaylistFormat.M3U8, true);
+            Text.SetLanguage("en");
+            var enPlans = PlaylistPlanner.Create(snapshot, onlyMp3, OutputMode.PerAlbum, PlaylistFormat.M3U8, "", "");
+            Assert(plPlans.Select(p => p.Path).SequenceEqual(enPlans.Select(p => p.Path)));
+            Assert(tracks[0].Name == Path.GetFileNameWithoutExtension(first));
+            Assert(plText == PlaylistCodec.Serialize(tracks, Path.Combine(root, "język.m3u8"), PlaylistFormat.M3U8, true));
+            Assert(enPlans[0].State == "Exists — will be skipped");
+        }
+        finally { Text.SetLanguage("pl"); }
+    });
+    Test("Zapamiętanie języka i bezpieczny domyślny język", () =>
+    {
+        var path = Path.Combine(root, "settings", "language.txt");
+        Assert(LanguagePreference.Load(path) == "pl");
+        LanguagePreference.Save("en", path);
+        Assert(LanguagePreference.Load(path) == "en");
+        LanguagePreference.Save("pl", path);
+        Assert(LanguagePreference.Load(path) == "pl");
+        File.WriteAllText(path, "invalid");
+        Assert(LanguagePreference.Load(path) == "pl");
+        Text.SetLanguage("invalid");
+        Assert(Text.Language == "pl");
+    });
 }
 finally
 {

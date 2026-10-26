@@ -14,7 +14,7 @@ public static class PlaylistCodec
     {
         ".m3u8" => PlaylistFormat.M3U8, ".m3u" => PlaylistFormat.M3U, ".pls" => PlaylistFormat.PLS,
         ".xspf" => PlaylistFormat.XSPF, ".wpl" => PlaylistFormat.WPL,
-        _ => throw new InvalidDataException("Nieobsługiwany format playlisty.")
+        _ => throw new InvalidDataException(Text.T("T126"))
     };
 
     public static string Serialize(IEnumerable<Track> source, string destination, PlaylistFormat format, bool relative)
@@ -29,7 +29,7 @@ public static class PlaylistCodec
         }
         string Clean(string value)
         {
-            if (value.Contains('\r') || value.Contains('\n')) throw new InvalidDataException("Ścieżka zawiera znak nowej linii.");
+            if (value.Contains('\r') || value.Contains('\n')) throw new InvalidDataException(Text.T("T127"));
             return value;
         }
         if (format is PlaylistFormat.M3U or PlaylistFormat.M3U8)
@@ -62,7 +62,7 @@ public static class PlaylistCodec
     {
         var format = Detect(path);
         using var stream = File.OpenRead(path);
-        if (stream.Length > 32 * 1024 * 1024) throw new InvalidDataException("Playlista jest zbyt duża (limit 32 MB).");
+        if (stream.Length > 32 * 1024 * 1024) throw new InvalidDataException(Text.T("T128"));
         var bytes = new byte[checked((int)stream.Length)];
         stream.ReadExactly(bytes);
         string text;
@@ -104,7 +104,7 @@ public static class PlaylistCodec
     {
         path = Path.GetFullPath(path);
         if (!string.Equals(Path.GetExtension(path), Extension(format), StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Rozszerzenie pliku nie odpowiada formatowi playlisty.");
+            throw new InvalidDataException(Text.T("T129"));
         var text = Serialize(tracks, path, format, relative);
         var temp = Path.Combine(Path.GetDirectoryName(path)!, $".listy-{Guid.NewGuid():N}.tmp");
         try

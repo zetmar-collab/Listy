@@ -2,6 +2,8 @@
 
 Lokalna aplikacja Windows z polskim interfejsem do automatycznego i ręcznego tworzenia playlist.
 
+**Języki aplikacji: Polski / English** · [English documentation](README.en.md)
+
 [**Pobierz Listy.exe — Windows x64**](https://github.com/zetmar-collab/Listy/releases/latest/download/Listy.exe) · [Wszystkie wydania](https://github.com/zetmar-collab/Listy/releases) · [Licencja MIT](LICENSE)
 
 ![Listy — studio playlist: wybór formatów muzyki, nazwy albumów i podgląd playlist](docs/images/listy.png)
@@ -24,6 +26,8 @@ Kod źródłowy nie zawiera gotowego EXE: plik jest dostępny w **Releases**. Pr
 Do każdego wydania dołączona jest suma kontrolna `SHA256SUMS.txt`. Aby sprawdzić pobrany plik w PowerShell, uruchom `Get-FileHash .\Listy.exe -Algorithm SHA256` i porównaj wynik.
 
 ## Tworzenie automatyczne
+
+Język wybierzesz na dole lewego panelu: **Język → Polski / English**. Zmiana działa od razu i zostaje zapamiętana w `%LOCALAPPDATA%\Listy\language.txt`. Domyślnym językiem jest polski. Nazwy plików, albumów i istniejących playlist nie zmieniają się po przełączeniu. Treść wcześniejszych raportów pozostaje w języku, w którym wykonano operację. Przyciski i elementy natywnych okien wyboru plików oraz błędy systemowe mogą używać języka Windows.
 
 1. Kliknij **Wybierz katalog**. Domyślnie program wczytuje także podkatalogi. Zmianę tego ustawienia zastosuj przyciskiem **Odśwież**.
 2. Wybierz miejsce zapisu:

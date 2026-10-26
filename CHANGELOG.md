@@ -1,5 +1,13 @@
 # Historia zmian
 
+## 1.1.0 — 2026-10-26
+
+- Przełącznik Polski / English w lewym panelu, działający bez restartu.
+- Tłumaczenia interfejsu, podglądu, statusów, komunikatów, raportów i błędów programu.
+- Zapamiętywanie języka w lokalnych ustawieniach użytkownika.
+- Własne dwujęzyczne okna potwierdzeń z bezpieczną odpowiedzią domyślną.
+- Katalogi tłumaczeń PL/EN oraz testy kompletności, parametrów, zapamiętywania i zachowania danych przy zmianie języka.
+
 ## 1.0.2 — 2026-10-26
 
 - Własna ikona programu z motywem playlisty i nuty w pliku EXE, oknie i na pasku zadań.

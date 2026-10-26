@@ -8,14 +8,15 @@ public sealed class Track(string location)
     public bool IsRemote => Uri.TryCreate(Location, UriKind.Absolute, out var uri) && !uri.IsFile;
     public string Name => IsRemote ? Location : Path.GetFileNameWithoutExtension(Location);
     public string Format => IsRemote ? "URL" : Path.GetExtension(Location).TrimStart('.').ToUpperInvariant();
-    public string Folder => IsRemote ? "Strumień internetowy" : Path.GetDirectoryName(Location) ?? "";
-    public string State => IsRemote ? "Strumień" : File.Exists(Location) ? "Dostępny" : "Brak pliku";
+    public string Folder => IsRemote ? Text.T("T116") : Path.GetDirectoryName(Location) ?? "";
+    public string State => IsRemote ? Text.T("T117") : File.Exists(Location) ? Text.T("T118") : Text.T("T119");
 }
 
 public record Album(string Directory, IReadOnlyList<Track> Tracks)
 {
     public string Name => Path.GetFileName(Directory.TrimEnd(Path.DirectorySeparatorChar));
-    public string Description => $"{Tracks.Count} utworów · {Directory}";
+    public string Description => Text.T("T120", Tracks.Count, Directory);
+    public string TrackCountLabel => Text.T("T098", Tracks.Count);
     public override string ToString() => Name;
 }
 
@@ -40,7 +41,7 @@ public static class LibraryScanner
     public static LibrarySnapshot Scan(string root, bool recursive, CancellationToken token = default)
     {
         root = Path.GetFullPath(root);
-        if (!Directory.Exists(root)) throw new DirectoryNotFoundException("Wybrany katalog nie istnieje.");
+        if (!Directory.Exists(root)) throw new DirectoryNotFoundException(Text.T("T121"));
         var albums = new List<Album>();
         var playlists = new List<PlaylistFile>();
         var warnings = new List<string>();
