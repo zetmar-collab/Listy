@@ -1,108 +1,108 @@
 # Listy — studio playlist
 
-Lokalna aplikacja Windows z polskim interfejsem do automatycznego i ręcznego tworzenia playlist.
+Lokalna aplikacja Windows do automatycznego i ręcznego tworzenia playlist. **Polski / English** · [English documentation](README.en.md)
 
-**Języki aplikacji: Polski / English** · [English documentation](README.en.md)
+[**Pobierz Listy.exe — Windows x64**](https://github.com/zetmar-collab/Listy/releases/latest/download/Listy.exe) · [Wydania](https://github.com/zetmar-collab/Listy/releases) · [MIT](LICENSE)
 
-[**Pobierz Listy.exe — Windows x64**](https://github.com/zetmar-collab/Listy/releases/latest/download/Listy.exe) · [Wszystkie wydania](https://github.com/zetmar-collab/Listy/releases) · [Licencja MIT](LICENSE)
-
-![Listy — studio playlist: wybór formatów muzyki, nazwy albumów i podgląd playlist](docs/images/listy.png)
-
-## Możliwości
-
-- Wybór katalogu i skanowanie podkatalogów.
-- Playlisty w folderach albumów, w katalogu głównym lub w wybranym podkatalogu.
-- Automatyczne nazwy playlist na podstawie nazw folderów albumów.
-- Filtr 12 rozszerzeń muzycznych oraz zapis M3U8, M3U, PLS, XSPF i WPL.
-- Ręczne układanie list, przeciąganie plików i zmiana kolejności utworów.
-- Podgląd zawartości, zmiana nazwy i przenoszenie starych playlist do Kosza.
+![Przykładowe okno Listy](docs/images/listy.png)
 
 ## Uruchomienie
 
-Pobierz **[Listy.exe z najnowszego wydania](https://github.com/zetmar-collab/Listy/releases/latest/download/Listy.exe)** i otwórz plik. Wersja przenośna dla Windows x64 zawiera środowisko .NET, nie wymaga instalacji, konta ani serwera. Można skopiować sam plik EXE na inny komputer. Pierwsze uruchomienie rozpakowuje biblioteki uruchomieniowe do katalogu tymczasowego .NET. Program nie ma podpisu cyfrowego.
+Pobierz i otwórz **Listy.exe**. Wersja przenośna Windows x64 zawiera środowisko .NET, nie wymaga instalatora, konta ani serwera. Pierwszy start rozpakowuje biblioteki do katalogu tymczasowego .NET. EXE nie ma podpisu cyfrowego.
 
-Kod źródłowy nie zawiera gotowego EXE: plik jest dostępny w **Releases**. Przy budowaniu ze źródeł otrzymasz go w `Program\Listy.exe`; wówczas możesz użyć także skryptu `Uruchom Listy.cmd`.
+Suma kontrolna znajduje się w **SHA256SUMS.txt** w wydaniu. Sprawdzenie:
 
-Do każdego wydania dołączona jest suma kontrolna `SHA256SUMS.txt`. Aby sprawdzić pobrany plik w PowerShell, uruchom `Get-FileHash .\Listy.exe -Algorithm SHA256` i porównaj wynik.
+~~~powershell
+Get-FileHash .\Listy.exe -Algorithm SHA256
+~~~
 
 ## Tworzenie automatyczne
 
-Język wybierzesz na dole lewego panelu: **Język → Polski / English**. Zmiana działa od razu i zostaje zapamiętana w `%LOCALAPPDATA%\Listy\language.txt`. Domyślnym językiem jest polski. Nazwy plików, albumów i istniejących playlist nie zmieniają się po przełączeniu. Treść wcześniejszych raportów pozostaje w języku, w którym wykonano operację. Przyciski i elementy natywnych okien wyboru plików oraz błędy systemowe mogą używać języka Windows.
+1. Kliknij **Wybierz katalog**. Opcje **Wczytaj podkatalogi** i **Odczytuj tagi i czas utworów** stosowane są przy skanowaniu; po ich zmianie kliknij **Odśwież**.
+2. Zaznacz checkboxy albumów, które chcesz przetworzyć. Przyciski **Wszystkie / Żaden** dotyczą albumów widocznych po zastosowaniu wyszukiwarki. Podgląd albumu otworzysz dwuklikiem.
+3. Wybierz lokalizację:
+   - **Osobno w każdym folderze / albumie** — nazwa listy pochodzi z folderu, np. Album Jazz/Album Jazz.m3u8. Foldery CD 1 i CD 2 mają osobne listy.
+   - **Jedna lista w katalogu głównym** — utwory z zaznaczonych albumów w jednej liście.
+   - **Jedna lista w podkatalogu** — lista zbiorcza w nazwanym podfolderze.
+4. Wybierz format playlisty, rozszerzenia muzyki i kolejność: nazwa pliku, wykonawca/album, album/numer lub numer utworu. Sortowanie po tagach wymaga ich wcześniejszego odczytu.
+5. Wybierz sposób obsługi istniejących playlist:
+   - **Pomiń istniejące** — domyślny tryb, bez nadpisywania.
+   - **Aktualizuj z kopią zapasową** — poprzedni plik otrzymuje unikalną nazwę z datą i rozszerzeniem .bak. Zastąpienie i kopia wykonywane są atomowo przez system plików.
+   - **Zapisz nową wersję** — powstaje np. Album Jazz (2).m3u8, bez zmiany poprzedniej listy.
+6. Sprawdź podgląd i kliknij **Utwórz playlisty**. Błąd nazwy jednego albumu nie blokuje pozostałych; szczegóły znajdziesz w **Raporcie**.
 
-1. Kliknij **Wybierz katalog**. Domyślnie program wczytuje także podkatalogi. Zmianę tego ustawienia zastosuj przyciskiem **Odśwież**.
-2. Wybierz miejsce zapisu:
-   - **Osobno w każdym folderze / albumie** — lista w każdym katalogu zawierającym bezpośrednio pliki muzyczne, z nazwą tego katalogu, np. `Spokojny poranek\Spokojny poranek.m3u8`. Zagnieżdżone foldery, np. `Album\CD 1`, dostają osobne listy, np. `CD 1.m3u8`. Lista nie obejmuje muzyki z innych folderów.
-   - **Jedna lista w katalogu głównym** — wszystkie pasujące utwory z aktualnie wczytanej biblioteki.
-   - **Jedna lista w podkatalogu** — zbiorcza lista w nazwanym podfolderze wybranego katalogu, np. `Muzyka\Playlisty`.
-3. Wybierz format playlisty i zaznacz formaty muzyki. W trybie osobnych list nazwy są pobierane automatycznie z folderów. Dla jednej listy zbiorczej wpisz nazwę **bez rozszerzenia**.
-4. Sprawdź tabelę wyników. Zaznacz listę i kliknij **Podgląd utworów** albo kliknij wiersz dwukrotnie, aby obejrzeć jej zawartość w edytorze.
-5. Kliknij **Utwórz playlisty**. Istniejące pliki są pomijane; automatyczny zapis ich nie nadpisuje. Błędy poszczególnych plików znajdziesz pod przyciskiem **Raport**.
+Album oznacza folder z bezpośrednio znajdującą się w nim muzyką. Tagi służą do wyświetlania i sortowania; nie zmieniają automatycznie przyporządkowania plików do albumów. Nazwy folderów, których nie można użyć jako nazwy playlisty (m.in. ponad 180 znaków), są pomijane z raportem.
 
-**Ścieżki względne** pozwalają przenosić folder z muzyką i playlistą razem. Przy przeniesieniu samej listy użyj ścieżek bezwzględnych albo zapisz ją ponownie w nowej lokalizacji w edytorze. Pliki na innym dysku mogą wymagać ścieżek bezwzględnych nawet przy zaznaczonej opcji względnej.
+Wyszukiwarka filtruje widoki albumów, utworów i zapisanych playlist. **Nie zmienia zaznaczenia albumów** — wcześniej zaznaczone, ukryte przez wyszukiwanie albumy nadal należą do planu zapisu.
 
-Foldery są traktowane jako albumy na podstawie struktury katalogów. Program nie odczytuje tagów albumu, tytułu ani czasu utworu. Nazwy w podglądzie pochodzą z nazw plików. Kolejność przy skanowaniu jest naturalna, np. `1`, `2`, `10`.
+## Edytor, tagi i kolejność
 
-## Ręczne tworzenie i podgląd
+Zakładka **Edytor i podgląd** pozwala tworzyć nowe listy oraz otwierać M3U8, M3U, PLS, XSPF i WPL. Dodaj pliki przyciskiem lub przeciągnij je z Eksploratora. Nowe duplikaty są pomijane; powtórzenia w importowanej liście pozostają do świadomego usunięcia.
 
-Otwórz zakładkę **Edytor i podgląd** i kliknij **Nowa lista**. Dodaj pliki przyciskiem **Dodaj utwory** albo przeciągnij je z Eksploratora do tabeli. Nowo dodane duplikaty są pomijane. Wybieraj wiele utworów z Ctrl lub Shift. Przyciski **W górę / W dół** przesuwają zaznaczenie; **Usuń zaznaczone** usuwa tylko pozycje z listy w pamięci, bez usuwania muzyki z dysku.
+Zmieniaj kolejność strzałkami lub przeciąganiem wierszy. Przy aktywnym filtrze zmiana dotyczy całej listy, również niewidocznych wpisów. Przyciski **Cofnij / Ponów** przechowują do 30 stanów listy w pamięci. Nie cofają zapisów na dysku; poprzednią wersję pliku zachowuje kopia .bak.
 
-Wybierz format i kliknij **Zapisz playlistę**. Systemowe okno pozwala podać nazwę i katalog. Ręczny zapis do istniejącego pliku wymaga potwierdzenia nadpisania. Rozszerzenie musi odpowiadać wybranemu formatowi. Zakładka **Treść pliku** pokazuje oryginalną zawartość wczytanej listy, a po edycji — tekst do zapisu. Dla nowej listy ścieżki w tym podglądzie są liczone względem katalogu biblioteki (lub katalogu Muzyka); ostateczny zapis przelicza je względem wybranego miejsca zapisu.
+**Odczytaj tagi** wczytuje tytuł, wykonawcę, album, numer i czas utworu. Widoczny jest łączny czas oraz liczba utworów ze znanym czasem. Program korzysta z ATL.NET i **nie zapisuje tagów do plików muzycznych**. Nieobsługiwane lub uszkodzone dane są raportowane. Nieznany czas pozostaje oznaczony kreską.
 
-Przycisk **Otwórz** wczytuje istniejącą playlistę także spoza biblioteki. Brakujące pliki są oznaczane w tabeli i pozostają na liście. Program zachowuje lokalizacje i kolejność, również powtarzające się wpisy i adresy strumieni. Przy ponownym zapisie odtwarza strukturę playlisty; niestandardowe metadane i oryginalne tytuły z tagów nie są zachowywane. Nie jest odtwarzaczem audio.
+**Zapisz playlistę** zapisuje otwartą listę, tworząc kopię zapasową istniejącego pliku. **Zapisz jako** pozwala wybrać inną nazwę, format i katalog. Można zapisać również pustą listę. Przed zastąpieniem edytowanej listy lub zamknięciem programu wybierasz **Zapisz / Odrzuć / Anuluj**.
 
-## Stare playlisty i zmiana nazwy
-
-Zakładka **Zapisane playlisty** pokazuje rozpoznane listy w wybranym katalogu i wczytanych podkatalogach. Zaznacz listę i kliknij **Podgląd / edycja**. **Zmień nazwę** zachowuje format i zawartość oraz nie nadpisuje istniejących plików.
-
-Zaznacz jedną lub wiele playlist i kliknij **Przenieś do Kosza**. Program pokaże konkretne ścieżki i poprosi o potwierdzenie. Dotyczy to wyłącznie zaznaczonych playlist, nigdy utworów. Dostępność Kosza zależy od rodzaju dysku i ustawień Windows; na udziałach sieciowych i niektórych nośnikach Windows może wymagać dodatkowej decyzji. Jeśli Windows proponuje trwałe usunięcie, anuluj operację, aby zachować plik.
-
-## Formaty
-
-| Typ | Obsługiwane rozszerzenia |
+| Skrót | Działanie |
 |---|---|
-| Muzyka | MP3, FLAC, WAV, M4A, AAC, OGG, OPUS, WMA, AIFF, AIF, APE, ALAC |
-| Playlisty | M3U8, M3U, PLS, XSPF, WPL |
+| Ctrl+S | Zapisz |
+| Ctrl+Shift+S | Zapisz jako |
+| Ctrl+O | Otwórz playlistę |
+| Ctrl+Z / Ctrl+Y | Cofnij / ponów zmiany listy |
+| Delete w tabeli utworów | Usuń zaznaczone wpisy z listy |
 
-Nowe playlisty są zapisywane w UTF-8. Dla polskich znaków zalecany jest M3U8. Odczyt wykrywa BOM, w tym UTF-16; starsze M3U i PLS bez poprawnego UTF-8 są odczytywane jako Windows-1250. Limit odczytu playlisty wynosi 32 MB. Filtr rozpoznaje rozszerzenia, nie analizuje kodowania audio. M4A może zawierać m.in. AAC lub ALAC.
+## Kontrola i naprawa
 
-## Przykładowa biblioteka
+**Sprawdź listę** wykrywa brakujące pliki, powtórzone lokalizacje i pustą listę. **Tylko brakujące** filtruje widok, bez usuwania pozycji. Usuwanie brakujących i duplikatów dotyczy wyłącznie wpisów listy w pamięci.
 
-Folder **Przykładowa muzyka** zawiera pięć krótkich syntetycznych plików WAV, dwa foldery z muzyką (jeden zagnieżdżony), starą playlistę oraz listy zapisane podczas kontroli programu. To dźwięki testowe, nie komercyjne nagrania. Odtworzysz je poleceniem `python scripts/CreateDemo.py`. Generator nie nadpisuje istniejących przykładów.
+Po przeniesieniu muzyki użyj **Napraw ścieżki**: wpisz stary katalog i wskaż nowy. Program zamieni prefiks tylko w brakujących wpisach należących do starego katalogu, zachowując podfoldery. Nie przenosi plików. Sprawdź wynik przed zapisem; zmianę można cofnąć.
 
-## Budowanie i testowanie ze źródeł
+W zakładce **Zapisane playlisty** przycisk **Sprawdź playlisty w bibliotece** uzupełnia wyniki kontroli; filtr **Tylko problemy** pokazuje listy z błędami. Dostępne są również podgląd, zmiana nazwy i przeniesienie zaznaczonych playlist do Kosza z potwierdzeniem.
 
-Wymagane: Windows i .NET SDK 8 lub nowszy. Brak zależności NuGet innych niż składniki .NET. Wersja przenośna może wymagać pobrania pakietów środowiska z NuGet podczas budowania.
+Dostępność Kosza zależy od nośnika i ustawień Windows. Anuluj systemowy komunikat proponujący trwałe usunięcie, jeśli chcesz zachować plik. Usunięta otwarta playlista pozostaje w edytorze jako niezapisana lista, bez automatycznego odtworzenia pliku przy starej ścieżce.
 
-```powershell
-dotnet build src/Listy.App/Listy.App.csproj -c Release
-dotnet run --project tests/Listy.Tests -c Release
-dotnet run --project src/Listy.App/Listy.App.csproj
-```
+## Formaty i zachowanie metadanych
 
-Budowanie samodzielnego EXE razem z testami:
+Muzyka: MP3, FLAC, WAV, M4A, AAC, OGG, OPUS, WMA, AIFF, AIF, APE, ALAC. Filtr opiera się na rozszerzeniach; dostępność tagów zależy od rzeczywistego formatu pliku.
 
-```powershell
+Playlisty: **M3U8, M3U, PLS, XSPF, WPL**. Zapis w UTF-8; odczyt wykrywa BOM i UTF-16, a starsze M3U/PLS mają fallback Windows-1250. Limit odczytu: 32 MB. Podgląd używa tego samego zdekodowanego tekstu co parser utworów.
+
+Przy edycji i zapisie w tym samym formacie zachowywane są tytuły i czasy oraz obsługiwane dodatkowe komentarze M3U, pola PLS i struktury/rozszerzenia XML. Zmiana formatu może utracić elementy, których format docelowy nie obsługuje — program ostrzega przed zapisem. Odbudowa uszkodzonej listy w trybie automatycznej aktualizacji zachowuje jej oryginał w kopii .bak.
+
+Ścieżki względne pozwalają przenosić playlistę razem z muzyką. Przy zapisie w innym katalogu są przeliczane. Różne dyski lub zachowane XML xml:base mogą wymagać ścieżek bezwzględnych.
+
+## Ustawienia i postęp
+
+Program zapamiętuje katalog, zaznaczenia, filtry formatów, tryb zapisu, kolejność, opcje odczytu, ścieżki względne i rozmiar okna w **%LOCALAPPDATA%/Listy/settings.json**. Język PL/EN zapisuje także w language.txt. Katalog jest ponownie skanowany przy uruchomieniu.
+
+Operacje plikowe działają w tle i pokazują postęp. Anulowanie jest sprawdzane między plikami i etapami; trwającego wywołania systemowego nie można natychmiast przerwać. Zakończone zapisy pozostają na dysku. Raporty historyczne pozostają w języku ich utworzenia, a systemowe okna używają języka Windows.
+
+## Budowanie i testy
+
+Wymagane: Windows, .NET SDK 8 lub nowszy oraz dostęp do NuGet przy pierwszym przywracaniu ATL.NET 7.19.0 (MIT). Gotowe EXE zawiera tę bibliotekę.
+
+~~~powershell
+.\scripts\Build.ps1
 .\scripts\Build.ps1 -Portable
-```
+~~~
 
-Gotowy plik: `Program\Listy.exe`. Publikacja publiczna wymaga odrębnego przygotowania certyfikatu i podpisu; skrypt tworzy lokalną wersję przenośną.
+Skrypt uruchamia 72 testy logiki/integracji i 6 testów okna WPF. Artefakty robocze trafiają do .build, więc budowanie nie wymaga zamykania uruchomionej wersji deweloperskiej. Wersja przenośna powstaje w **Program/Listy.exe**, razem z SHA256SUMS.txt i informacją o licencji biblioteki. GitHub Actions wykonuje testy przy pushu i pull requestach.
 
-## Architektura
+Przykładowa muzyka zawiera pięć syntetycznych plików WAV i testowe listy. Generator: **python scripts/CreateDemo.py**. Nie są to komercyjne nagrania.
 
-Ikona programu znajduje się w `src/Listy.App/Assets`: `Listy.ico` zawiera dziewięć rozmiarów (16–256 px), `Listy.png` służy jako duży podgląd, a `Listy.svg` jako źródło wektorowe. Generator `python scripts/CreateIcon.py` wymaga opcjonalnej biblioteki Pillow; zwykłe budowanie używa gotowego ICO i nie wymaga Pythona.
+## Architektura i licencje
 
-```text
-WPF / MainWindow
-  ├─ LibraryScanner → LibrarySnapshot → Album / Track / PlaylistFile
-  ├─ PlaylistPlanner → PlaylistPlan → podgląd → zapis
-  ├─ PlaylistCodec → M3U8 / M3U / PLS / XSPF / WPL
-  └─ Windows → wybór katalogu / pliku / Kosz
-```
+~~~text
+WPF: MainWindow + Editor + Management + Styles
+  → LibraryScanner / AudioMetadata → Album / Track / PlaylistFile
+  → PlaylistPlanner → plan / ostrzeżenia / zaznaczone albumy
+  → PlaylistWriter → polityka kolizji / atomowy zapis / kopie
+  → PlaylistCodec → PlaylistDocument / tekst / metadane
+  → PlaylistTools / EditorHistory / AppSettings / tłumaczenia PL-EN
+~~~
 
-`src/Listy.Core` zawiera skanowanie, walidację nazw, planowanie, formaty i atomowy zapis przez plik tymczasowy w katalogu docelowym. `src/Listy.App` zawiera interfejs i integrację z Windows. `tests/Listy.Tests` jest niezależnym programem testowym, który zwraca niezerowy kod przy błędzie. `scripts` zawiera budowanie i generator przykładów.
+Brak serwera i bazy danych. Muzyka pozostaje na dysku. Skaner pomija dowiązania katalogów, a parser XML blokuje DTD i zewnętrzne encje.
 
-Skanowanie i zapis automatyczny działają poza wątkiem interfejsu i pozwalają anulować dalsze przetwarzanie. Zakończone zapisy pozostają na dysku po anulowaniu. Skaner pomija dowiązania katalogów, aby nie zapętlać rekursji. Błędy dostępu trafiają do raportu. XML jest czytany bez DTD i zewnętrznych encji. Dane nie są wysyłane przez sieć. Nie ma bazy danych ani serwera API; model danych pozostaje w pamięci, a źródłem prawdy są pliki.
-
-Testy obejmują skanowanie z podkatalogami i bez nich, anulowanie, sortowanie naturalne, filtry, trzy tryby zapisu, zapis/odczyt pięciu formatów, ścieżki względne i bezwzględne, Unicode, strumienie, brakujące pliki, ochronę istniejących list, walidację nazw i blokowanie DTD. Kontrola ręczna obejmuje okno główne, wybór folderu, zapis automatyczny i podgląd listy.
-
-Wybór WPF/.NET wykorzystuje natywne okna Windows i dostępne środowisko kompilacji bez Node, Rust ani przeglądarki. Kompromis: ta wersja działa wyłącznie w Windows. Możliwe dalsze rozszerzenia: tagi albumów, czasy utworów, odtwarzanie i zapamiętywanie ustawień.
+Kod Listy: [MIT](LICENSE). ATL.NET: [źródła](https://github.com/Zeugma440/atldotnet) i [informacje licencyjne](THIRD-PARTY-NOTICES.txt), dostępne także w oknie **Informacje / licencje**. Źródła ikony znajdują się w src/Listy.App/Assets.

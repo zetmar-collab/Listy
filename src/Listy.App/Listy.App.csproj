@@ -3,9 +3,10 @@
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <AssemblyName>Listy</AssemblyName>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <ApplicationIcon>Assets\Listy.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../Listy.Core/Listy.Core.csproj" /></ItemGroup>
   <ItemGroup><Resource Include="Assets\Listy.ico" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="../../THIRD-PARTY-NOTICES.txt" LogicalName="Listy.ThirdPartyNotices" /></ItemGroup>
 </Project>

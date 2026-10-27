@@ -1,5 +1,20 @@
 # Historia zmian
 
+## 1.2.0 — 2026-10-27
+
+- Wspólny odczyt tekstu i utworów z wykrywaniem kodowania; poprawiony podgląd Windows-1250.
+- Błędny album jest raportowany osobno i nie zatrzymuje poprawnych playlist.
+- Operacje plikowe w tle, pasek postępu i anulowanie.
+- Wybór albumów, wyszukiwarka i zapamiętywanie ustawień, katalogu oraz rozmiaru okna.
+- Tryby pomijania, aktualizacji z atomową kopią zapasową i zapisu kolejnej wersji.
+- Zachowywanie tytułów, czasów, komentarzy, pól PLS i rozszerzeń XML w tym samym formacie.
+- Potwierdzenie Zapisz / Odrzuć / Anuluj, cofanie i ponawianie do 30 kroków.
+- Przeciąganie kolejności utworów, skróty klawiaturowe oraz zapis pustej listy.
+- Kontrola brakujących plików, duplikatów i pustych list; naprawa prefiksów ścieżek.
+- Tagi audio, czas trwania, łączny czas oraz sortowanie po tagach i nazwach.
+- Odczyt tagów przez ATL.NET 7.19.0 (MIT), bez zapisu do plików muzycznych.
+- Testy logiki oraz testy okna WPF, dwujęzyczna dokumentacja i automatyczna suma SHA-256 przy budowaniu.
+
 ## 1.1.0 — 2026-10-26
 
 - Przełącznik Polski / English w lewym panelu, działający bez restartu.

@@ -223,6 +223,7 @@ try
         Text.SetLanguage("invalid");
         Assert(Text.Language == "pl");
     });
+    UpgradeTests.Run(root, Test);
 }
 finally
 {

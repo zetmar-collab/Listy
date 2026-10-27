@@ -1,3 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup><EmbeddedResource Include="Translations\*.json" /></ItemGroup>
+  <ItemGroup><PackageReference Include="z440.atl.core" Version="7.19.0" /></ItemGroup>
 </Project>
