@@ -17,15 +17,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class StorageInstrumentedTest {
     private Storage storage;private Storage.Entry folder;private String tree;private final AtomicBoolean stop=new AtomicBoolean();
     @Before public void setup() throws Exception {
-        // Temporary test-process identity, dropped in cleanup. Production requests user SAF grants.
-        InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity("android.permission.MANAGE_DOCUMENTS");
+        // The fixture owner issues a real URI grant; production requests user SAF grants.
+        FixturePermissions.grant();
         Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();storage=new Storage(context);
         Uri root=DocumentsContract.buildTreeDocumentUri("pl.zetmar.studioplaylist.test.documents","root");
         Storage.Entry providerRoot=storage.describe(DocumentsContract.buildDocumentUriUsingTree(root,"root"));
         folder=storage.create(providerRoot,"run-"+UUID.randomUUID(),true);
         tree=DocumentsContract.buildTreeDocumentUri("pl.zetmar.studioplaylist.test.documents",DocumentsContract.getDocumentId(Uri.parse(folder.uri))).toString();
     }
-    @After public void cleanup() throws Exception {try{if(folder!=null)clean(folder);}finally{InstrumentationRegistry.getInstrumentation().getUiAutomation().dropShellPermissionIdentity();}}
+    @After public void cleanup() throws Exception {try{if(folder!=null)clean(folder);}finally{FixturePermissions.revoke();}}
     private void clean(Storage.Entry e) throws Exception {if(e.directory)for(Storage.Entry child:storage.children(e,stop))clean(child);DocumentsContract.deleteDocument(InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver(),Uri.parse(e.uri));}
     @Test public void recursiveScanSeesAlbumAudioAndPlaylists() throws Exception {
         Storage.Entry album=storage.create(folder,"Zażółć Album",true);storage.create(album,"02 utwór.MP3",false);storage.create(album,"Album.m3u8",false);storage.create(album,"not-music.txt",false);
@@ -75,7 +75,7 @@ public class StorageInstrumentedTest {
     }
     @Test public void missingDocumentAndRevokedPermissionAreReported() throws Exception {
         Storage.Entry e=storage.create(folder,"removed.m3u8",false);storage.deletePlaylist(e);boolean unavailable=false;try{storage.read(e.uri);}catch(Exception ex){unavailable=true;}assertThat(unavailable).isTrue();
-        InstrumentationRegistry.getInstrumentation().getUiAutomation().dropShellPermissionIdentity();boolean denied=false;try{storage.children(folder,stop);}catch(SecurityException ex){denied=true;}finally{InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity("android.permission.MANAGE_DOCUMENTS");}assertThat(denied).isTrue();
+        FixturePermissions.revoke();boolean denied=false;try{storage.children(folder,stop);}catch(SecurityException ex){denied=true;}finally{FixturePermissions.grant();}assertThat(denied).isTrue();
     }
     private byte[] wav(int dataSize){java.nio.ByteBuffer b=java.nio.ByteBuffer.allocate(44+dataSize).order(java.nio.ByteOrder.LITTLE_ENDIAN);b.put("RIFF".getBytes(StandardCharsets.US_ASCII)).putInt(36+dataSize).put("WAVEfmt ".getBytes(StandardCharsets.US_ASCII)).putInt(16).putShort((short)1).putShort((short)1).putInt(8000).putInt(16000).putShort((short)2).putShort((short)16).put("data".getBytes(StandardCharsets.US_ASCII)).putInt(dataSize);return b.array();}
     @Test public void metadataCacheReusesTagsAndInvalidatesChangedAudio() throws Exception {

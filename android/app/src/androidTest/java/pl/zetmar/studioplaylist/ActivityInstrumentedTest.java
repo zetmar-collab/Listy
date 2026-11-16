@@ -54,20 +54,20 @@ public class ActivityInstrumentedTest {
         instrumentation.runOnMainSync(()->{try{set("previewPlayer",new android.media.MediaPlayer());activity.onPause();assertThat(get("previewPlayer")).isNull();}catch(Exception ex){throw new RuntimeException(ex);}});
     }
     @Test public void sameFolderReselectionPreservesSelectedAlbums() throws Exception {
-        instrumentation.getUiAutomation().adoptShellPermissionIdentity("android.permission.MANAGE_DOCUMENTS");Storage storage=new Storage(activity);Storage.Entry created=null;
+        FixturePermissions.grant();Storage storage=new Storage(activity);Storage.Entry created=null;
         try{android.net.Uri root=android.provider.DocumentsContract.buildTreeDocumentUri("pl.zetmar.studioplaylist.test.documents","root");Storage.Entry provider=storage.describe(android.provider.DocumentsContract.buildDocumentUriUsingTree(root,"root"));created=storage.create(provider,"select-"+UUID.randomUUID(),true);Storage.Entry song=storage.create(created,"song.mp3",false);String tree=android.provider.DocumentsContract.buildTreeDocumentUri("pl.zetmar.studioplaylist.test.documents",android.provider.DocumentsContract.getDocumentId(android.net.Uri.parse(created.uri))).toString();Storage.Library library=storage.scan(tree,true,false,new java.util.concurrent.atomic.AtomicBoolean(),s->{});Set<String> selected=new HashSet<>(List.of(library.root.uri));
             instrumentation.runOnMainSync(()->{try{set("tree",tree);set("library",library);set("selected",selected);activity.getSharedPreferences("listy",Context.MODE_PRIVATE).edit().putString("scannedTree",tree).commit();activity.onActivityResult(10,Activity.RESULT_OK,new Intent().setData(android.net.Uri.parse(tree)));}catch(Exception ex){throw new RuntimeException(ex);}});awaitReady();assertThat((Set<?>)get("selected")).containsExactly(library.root.uri);android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(song.uri));
-        }finally{if(created!=null)android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(created.uri));instrumentation.getUiAutomation().dropShellPermissionIdentity();}
+        }finally{if(created!=null)android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(created.uri));FixturePermissions.revoke();}
     }
     @Test public void exportUsesDurablePayloadAfterRecreation() throws Exception {
-        instrumentation.getUiAutomation().adoptShellPermissionIdentity("android.permission.MANAGE_DOCUMENTS");Storage storage=new Storage(activity);Storage.Entry target=null;
+        FixturePermissions.grant();Storage storage=new Storage(activity);Storage.Entry target=null;
         try{android.net.Uri root=android.provider.DocumentsContract.buildTreeDocumentUri("pl.zetmar.studioplaylist.test.documents","root");Storage.Entry provider=storage.describe(android.provider.DocumentsContract.buildDocumentUriUsingTree(root,"root"));target=storage.create(provider,"export-"+UUID.randomUUID()+".m3u8",false);byte[] payload="#EXTM3U\nAlbum/song.mp3\n".getBytes(java.nio.charset.StandardCharsets.UTF_8);android.util.AtomicFile pending=new android.util.AtomicFile(new File(activity.getFilesDir(),"pending-export"));FileOutputStream stream=pending.startWrite();stream.write(payload);pending.finishWrite(stream);Storage.Entry destination=target;
             instrumentation.runOnMainSync(()->activity.finish());instrumentation.waitForIdleSync();activity=(MainActivity)instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));awaitReady();
             instrumentation.runOnMainSync(()->activity.onActivityResult(13,Activity.RESULT_OK,new Intent().setData(android.net.Uri.parse(destination.uri))));awaitReady();assertThat(storage.read(target.uri)).isEqualTo(payload);
-        }finally{if(target!=null)storage.deletePlaylist(target);instrumentation.getUiAutomation().dropShellPermissionIdentity();}
+        }finally{if(target!=null)storage.deletePlaylist(target);FixturePermissions.revoke();}
     }
     @Test public void unsavedEditorSupportsCancelDiscardAndSaveWithBackup() throws Exception {
-        instrumentation.getUiAutomation().adoptShellPermissionIdentity("android.permission.MANAGE_DOCUMENTS");Storage storage=new Storage(activity);Storage.Entry folder=null;
+        FixturePermissions.grant();Storage storage=new Storage(activity);Storage.Entry folder=null;
         try{android.net.Uri root=android.provider.DocumentsContract.buildTreeDocumentUri("pl.zetmar.studioplaylist.test.documents","root");Storage.Entry provider=storage.describe(android.provider.DocumentsContract.buildDocumentUriUsingTree(root,"root"));folder=storage.create(provider,"guard-"+UUID.randomUUID(),true);storage.save(folder,"Album.m3u8","#EXTM3U\nhttps://example.org/old\n".getBytes(java.nio.charset.StandardCharsets.UTF_8),0,new java.util.concurrent.atomic.AtomicBoolean());Storage.Entry saved=storage.find(folder,"Album.m3u8",new java.util.concurrent.atomic.AtomicBoolean());
             for(int button:new int[]{android.app.AlertDialog.BUTTON_NEUTRAL,android.app.AlertDialog.BUTTON_NEGATIVE,android.app.AlertDialog.BUTTON_POSITIVE}){
                 java.util.concurrent.atomic.AtomicInteger continued=new java.util.concurrent.atomic.AtomicInteger();
@@ -77,6 +77,6 @@ public class ActivityInstrumentedTest {
                 String text=PlaylistCodec.decode(storage.read(saved.uri));assertThat(text).contains(button==android.app.AlertDialog.BUTTON_POSITIVE?"https://example.org/new":"https://example.org/old");
             }
             assertThat(storage.children(folder,new java.util.concurrent.atomic.AtomicBoolean()).stream().filter(e->e.name.endsWith(".bak")).count()).isEqualTo(1);
-        }finally{if(folder!=null){for(Storage.Entry e:storage.children(folder,new java.util.concurrent.atomic.AtomicBoolean()))android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(e.uri));android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(folder.uri));}instrumentation.getUiAutomation().dropShellPermissionIdentity();}
+        }finally{if(folder!=null){for(Storage.Entry e:storage.children(folder,new java.util.concurrent.atomic.AtomicBoolean()))android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(e.uri));android.provider.DocumentsContract.deleteDocument(activity.getContentResolver(),android.net.Uri.parse(folder.uri));}FixturePermissions.revoke();}
     }
 }
