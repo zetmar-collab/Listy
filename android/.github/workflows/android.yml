@@ -25,11 +25,12 @@ jobs:
         run: |
           sudo chmod 666 /dev/kvm
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n listy-ci -k 'system-images;android-35;google_apis;x86_64'
-          "$ANDROID_HOME/emulator/emulator" -avd listy-ci -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect > /tmp/listy-emulator.log 2>&1 &
-          "$ANDROID_HOME/platform-tools/adb" wait-for-device
+          "$ANDROID_HOME/emulator/emulator" -avd listy-ci -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader > /tmp/listy-emulator.log 2>&1 &
+          emulator_pid=$!
           for i in $(seq 1 90); do
-            if [ "$("$ANDROID_HOME/platform-tools/adb" shell getprop sys.boot_completed | tr -d '\r')" = '1' ]; then break; fi
+            if ! kill -0 "$emulator_pid" 2>/dev/null; then cat /tmp/listy-emulator.log; exit 1; fi
+            if [ "$("$ANDROID_HOME/platform-tools/adb" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = '1' ]; then break; fi
             sleep 2
           done
-          test "$("$ANDROID_HOME/platform-tools/adb" shell getprop sys.boot_completed | tr -d '\r')" = '1'
+          if [ "$("$ANDROID_HOME/platform-tools/adb" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != '1' ]; then cat /tmp/listy-emulator.log; exit 1; fi
           ./gradlew --no-daemon --max-workers 2 connectedDebugAndroidTest
