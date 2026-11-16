@@ -12,6 +12,7 @@ internal static class Program
     private static int Main()
     {
         var app = new Application();
+        SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
         app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("pack://application:,,,/Listy;component/Styles.xaml") });
         Text.SetLanguage("pl");
         var window = new MainWindow(new AppSettings { Root = null }, persistSettings: false);
@@ -76,6 +77,24 @@ internal static class Program
                 Check(Items().Single().Name == "Mój utwór" && Find<TextBlock>("EditorTitle").Text == "Test");
                 Check(Find<TextBlock>("DirtyLabel").Visibility == Visibility.Visible);
                 Check(Find<TextBlock>("EditorCount").Text.Contains("Tracks: 1"));
+            });
+            foreach (var label in new[] { "Anuluj", "Odrzuć", "Zapisz" }) Test("Niezapisany edytor: " + label, () =>
+            {
+                Text.SetLanguage("pl"); new System.Windows.Interop.WindowInteropHelper(window).EnsureHandle();
+                var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Listy-ui-" + Guid.NewGuid()); System.IO.Directory.CreateDirectory(folder);
+                var path = System.IO.Path.Combine(folder, "Test.m3u8"); var before = new Track("https://example.org/old"); var after = new Track("https://example.org/new");
+                PlaylistCodec.Save(path, [before], PlaylistFormat.M3U8, true);
+                Call("SetEditor", new[] { after }, path, PlaylistFormat.M3U8, "Test", PlaylistCodec.ReadDocument(path)); Call("MarkDirty");
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(30) }; var deadline = DateTime.UtcNow.AddSeconds(15); bool timedOut = false;
+                IEnumerable<Button> Buttons(DependencyObject parent) { for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++) { var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i); if (child is Button button) yield return button; foreach (var nested in Buttons(child)) yield return nested; } }
+                timer.Tick += (_, _) => { foreach (Window dialog in window.OwnedWindows.Cast<Window>().ToArray()) { if (DateTime.UtcNow > deadline) { timedOut = true; dialog.Close(); continue; } var button = Buttons(dialog).FirstOrDefault(b => b.Content?.ToString() == label || b.Content?.ToString() == "Tak"); if (button != null) { button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); if (dialog.IsVisible) dialog.Close(); } } };
+                timer.Start(); try {
+                    var pending = (Task<bool>)typeof(MainWindow).GetMethod("CanReplaceEditor", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(window, null)!;
+                    var frame = new DispatcherFrame(); _ = pending.ContinueWith(_ => window.Dispatcher.BeginInvoke(() => frame.Continue = false)); if (!pending.IsCompleted) Dispatcher.PushFrame(frame);
+                    Check(!timedOut && pending.Result == (label != "Anuluj"));
+                    var saved = PlaylistCodec.ReadDocument(path).Tracks.Single().Location; Check(saved == (label == "Zapisz" ? after.Location : before.Location));
+                    if (label == "Zapisz") Check(PlaylistRevisions.List(path).Length == 1);
+                } finally { timer.Stop(); System.IO.Directory.Delete(folder, true); }
             });
         }
         finally

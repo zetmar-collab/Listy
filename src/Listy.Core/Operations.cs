@@ -10,7 +10,7 @@ public record WriteResult(string Path, bool Written, string? BackupPath);
 public static class PlaylistWriter
 {
     public static WriteResult Write(string path, IEnumerable<Track> tracks, PlaylistFormat format, bool relative,
-        ExistingPlaylistPolicy policy, PlaylistDocument? document = null, CancellationToken token = default)
+        ExistingPlaylistPolicy policy, PlaylistDocument? document = null, CancellationToken token = default, string encodingName = "utf-8")
     {
         token.ThrowIfCancellationRequested();
         path = Path.GetFullPath(path);
@@ -50,7 +50,7 @@ public static class PlaylistWriter
                 }
             }
         }
-        PlaylistCodec.Save(path, tracks, format, relative, policy == ExistingPlaylistPolicy.UpdateWithBackup, document, token, backup);
+        PlaylistCodec.Save(path, tracks, format, relative, policy == ExistingPlaylistPolicy.UpdateWithBackup, document, token, backup, encodingName);
         return new(path, true, backup != null && File.Exists(backup) ? backup : null);
     }
 }
@@ -95,6 +95,12 @@ public static class PlaylistTools
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
         return source.Where(t => seen.Add(Identity(t))).ToArray();
+    }
+    public static IReadOnlyList<Track> RemoveMissing(IEnumerable<Track> source, CancellationToken token = default)
+    {
+        var tracks = source.ToArray();
+        foreach (var track in tracks) { token.ThrowIfCancellationRequested(); track.RefreshAvailability(); }
+        return tracks.Where(t => !t.IsMissing).ToArray();
     }
     public static IReadOnlyList<Track> Relocate(IEnumerable<Track> source, string oldRoot, string newRoot, bool onlyMissing = true, CancellationToken token = default)
     {
@@ -144,6 +150,8 @@ public sealed record AppSettings
     public bool Recursive { get; init; } = true;
     public bool Relative { get; init; } = true;
     public bool ReadMetadata { get; init; }
+    public string AutoEncoding { get; init; } = "utf-8";
+    public string EditorEncoding { get; init; } = "utf-8";
     public int Format { get; init; }
     public int Mode { get; init; }
     public int Policy { get; init; }

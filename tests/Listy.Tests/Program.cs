@@ -107,7 +107,8 @@ try
     {
         var plan = PlaylistPlanner.Create(snapshot, onlyMp3, OutputMode.PerAlbum, PlaylistFormat.M3U8, "", "Listy").Single();
         PlaylistCodec.Save(plan.Path, plan.Tracks, PlaylistFormat.M3U8, true);
-        Assert(plan.State == "Istnieje — zostanie pominięta");
+        var refreshed = PlaylistPlanner.Create(LibraryScanner.Scan(root, true), onlyMp3, OutputMode.PerAlbum, PlaylistFormat.M3U8, "", "Listy").Single();
+        Assert(refreshed.State == "Istnieje — zostanie pominięta");
     });
     Test("Plan zbiorczy w katalogu głównym", () =>
     {
@@ -206,7 +207,7 @@ try
             Assert(plPlans.Select(p => p.Path).SequenceEqual(enPlans.Select(p => p.Path)));
             Assert(tracks[0].Name == Path.GetFileNameWithoutExtension(first));
             Assert(plText == PlaylistCodec.Serialize(tracks, Path.Combine(root, "język.m3u8"), PlaylistFormat.M3U8, true));
-            Assert(enPlans[0].State == "Exists — will be skipped");
+            Assert((enPlans[0] with { ExistsAtScan = true }).State == "Exists — will be skipped");
         }
         finally { Text.SetLanguage("pl"); }
     });
@@ -224,6 +225,8 @@ try
         Assert(Text.Language == "pl");
     });
     UpgradeTests.Run(root, Test);
+    AuditFixTests.Run(root, Test);
+    StudioTests.Run(root, Test);
 }
 finally
 {

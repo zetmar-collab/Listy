@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _persistSettings = persistSettings;
         _root = settings.Root; _selectedAlbums = settings.SelectedAlbums;
+        _autoEncoding = settings.AutoEncoding; _editorEncoding = settings.EditorEncoding;
         LanguageBox.SelectedIndex = Text.Language == "en" ? 1 : 0;
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(System.Globalization.CultureInfo.CurrentCulture.Name);
         Width = double.IsFinite(settings.Width) ? Math.Clamp(settings.Width, MinWidth, Math.Max(MinWidth, SystemParameters.WorkArea.Width)) : 1360;
@@ -73,6 +74,7 @@ public partial class MainWindow : Window
             {
                 Root = _root, Language = Text.Language, Recursive = Recursive.IsChecked == true,
                 Relative = RelativeBox.IsChecked == true, ReadMetadata = ReadTagsBox.IsChecked == true,
+                AutoEncoding = _autoEncoding, EditorEncoding = _editorEncoding,
                 Format = FormatBox.SelectedIndex, Mode = ModeBox.SelectedIndex, Policy = PolicyBox.SelectedIndex,
                 SortMode = AutoSortBox.SelectedIndex,
                 Name = NameBox.Text, Subfolder = SubfolderBox.Text,
@@ -219,7 +221,7 @@ public partial class MainWindow : Window
             _plans = result.Plans.Select(p => p with { Policy = policy, Tracks = PlaylistTools.Sort(p.Tracks, order) }).ToArray(); _planWarnings = result.Warnings;
             PlanGrid.ItemsSource = _plans; PlanEmpty.Visibility = _plans.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             PlanEmpty.Text = _library == null ? Text.T("T037") : _planWarnings.Count > 0 ? string.Join("\n", _planWarnings) : Text.T("T078");
-            var actionable = _plans.Count(p => policy != ExistingPlaylistPolicy.Skip || !File.Exists(p.Path));
+            var actionable = _plans.Count(p => policy != ExistingPlaylistPolicy.Skip || !p.ExistsAtScan);
             PlanSummary.Text = Text.T("PlanStatus", _plans.Count, _plans.Sum(p => p.Count), actionable, _planWarnings.Count); GenerateButton.IsEnabled = actionable > 0;
         }
         catch (Exception ex) { _plans = []; PlanGrid.ItemsSource = _plans; PlanEmpty.Visibility = Visibility.Visible; PlanEmpty.Text = ex.Message; PlanSummary.Text = Text.T("T080"); GenerateButton.IsEnabled = false; }
@@ -231,6 +233,11 @@ public partial class MainWindow : Window
         _refreshTimer.Stop(); RefreshPlan(); if (_plans.Count == 0) return;
         var plans = _plans.ToArray(); var relative = RelativeBox.IsChecked == true; var format = (PlaylistFormat)FormatBox.SelectedIndex;
         var policy = (ExistingPlaylistPolicy)PolicyBox.SelectedIndex;
+        if (policy == ExistingPlaylistPolicy.UpdateWithBackup)
+        {
+            var differences = await Work("Validating", (token, _) => string.Join("\n\n", plans.Where(p => p.ExistsAtScan).Select(p => p.Name + "\n" + DifferenceText(PlaylistDifference.Compare(PlaylistCodec.ReadDocument(p.Path, token).Tracks, p.Tracks)))));
+            if (differences == null || differences.Length > 0 && !Confirm(differences + "\n\n" + L("Aktualizować z kopią zapasową?", "Update with backups?"), L("Zmiany przed zapisem", "Changes before saving"))) return;
+        }
         var result = await Work("T081", (token, progress) =>
         {
             var log = new List<string>(_planWarnings); int written = 0, skipped = 0, errors = 0;
@@ -240,7 +247,7 @@ public partial class MainWindow : Window
                 try
                 {
                     if (Directory.Exists(plan.Folder) && (File.GetAttributes(plan.Folder) & FileAttributes.ReparsePoint) != 0) throw new IOException(Text.T("T084"));
-                    var output = PlaylistWriter.Write(plan.Path, plan.Tracks, format, relative, policy, token: token);
+                    var output = PlaylistWriter.Write(plan.Path, plan.Tracks, format, relative, policy, token: token, encodingName: _autoEncoding);
                     if (output.Written) { written++; log.Add(Text.T("T085") + output.Path + (output.BackupPath == null ? "" : " · " + output.BackupPath)); }
                     else { skipped++; log.Add(Text.T("T083") + output.Path); }
                 }
@@ -260,7 +267,7 @@ public partial class MainWindow : Window
         if (PlanGrid.SelectedItem is not PlaylistPlan plan) { Status(Text.T("T089")); return; }
         if (!await CanReplaceEditor()) return;
         SetEditor(plan.Tracks, plan.Path, (PlaylistFormat)FormatBox.SelectedIndex, plan.Name, null);
-        _loading = true; EditorRelative.IsChecked = RelativeBox.IsChecked; _loading = false; MarkDirty(); Tabs.SelectedIndex = 2;
+        _editorEncoding = _autoEncoding; _loading = true; EditorRelative.IsChecked = RelativeBox.IsChecked; _loading = false; MarkDirty(); Tabs.SelectedIndex = 2;
     }
     private void Plan_DoubleClick(object sender, MouseButtonEventArgs e) => PlanPreview_Click(sender, e);
     private async void Album_DoubleClick(object sender, MouseButtonEventArgs e)

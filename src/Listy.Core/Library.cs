@@ -82,6 +82,7 @@ public static class LibraryScanner
         var albums = new List<Album>();
         var playlists = new List<PlaylistFile>();
         var warnings = new List<string>();
+        var cache = readMetadata ? new MetadataCache() : null;
         var pending = new Stack<string>();
         pending.Push(root);
         var folders = 0;
@@ -99,7 +100,7 @@ public static class LibraryScanner
                     if (AudioExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
                     {
                         var track = new Track(file);
-                        if (readMetadata) AudioMetadata.Read(track);
+                        cache?.Read(track);
                         if (track.MetadataWarning != null) warnings.Add(file + ": " + track.MetadataWarning);
                         tracks.Add(track);
                     }
@@ -115,6 +116,7 @@ public static class LibraryScanner
                 warnings.Add($"{folder}: {ex.Message}");
             }
         }
+        if (cache != null) try { cache.Save(); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { warnings.Add(e.Message); }
         return new(root, albums.OrderBy(a => a.Directory, NaturalPathComparer.Instance).ToArray(),
             playlists.OrderBy(p => p.Path, NaturalPathComparer.Instance).ToArray(), warnings);
     }

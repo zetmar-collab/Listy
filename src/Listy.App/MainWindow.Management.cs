@@ -13,7 +13,7 @@ public partial class MainWindow
     {
         using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream("Listy.ThirdPartyNotices")!;
         using var reader = new StreamReader(stream);
-        var text = new TextBox { Text = "Listy 1.2.0\n\n" + reader.ReadToEnd(), IsReadOnly = true, TextWrapping = TextWrapping.Wrap,
+        var text = new TextBox { Text = "Listy 1.3.0\n\n" + reader.ReadToEnd(), IsReadOnly = true, TextWrapping = TextWrapping.Wrap,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Margin = new Thickness(18) };
         new Window { Owner = this, Title = Text.T("About"), Content = text, Width = 760, Height = 540, WindowStartupLocation = WindowStartupLocation.CenterOwner }.ShowDialog();
     }
@@ -57,11 +57,16 @@ public partial class MainWindow
         if (count == 0) { Status(Text.T("DuplicatesRemoved", 0)); return; }
         Remember(); _tracks.Clear(); foreach (var t in unique) _tracks.Add(t); MarkDirty(); Status(Text.T("DuplicatesRemoved", count));
     }
-    private void RemoveMissing_Click(object sender, RoutedEventArgs e)
+    private async void RemoveMissing_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
-        var missing = _tracks.Where(t => t.IsMissing).ToArray(); if (missing.Length == 0) return;
-        Remember(); foreach (var t in missing) _tracks.Remove(t); MarkDirty();
+        var source = _tracks.ToArray();
+        var remaining = await Work("Validating", (token, _) => PlaylistTools.RemoveMissing(source, token).ToArray());
+        if (remaining == null) return;
+        var count = source.Length - remaining.Length;
+        if (count == 0) { TracksGrid.Items.Refresh(); ApplyFilters(); return; }
+        if (!Confirm(Text.Language == "pl" ? $"Usunąć {count} niedostępnych wpisów? Pliki muzyczne pozostaną na dysku." : $"Remove {count} unavailable entries? Music files remain on disk.", Text.T("RemoveMissing"))) return;
+        Remember(); _tracks.Clear(); foreach (var track in remaining) _tracks.Add(track); MarkDirty();
     }
     private async void Repair_Click(object sender, RoutedEventArgs e)
     {

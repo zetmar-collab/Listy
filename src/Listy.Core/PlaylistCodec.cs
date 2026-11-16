@@ -19,6 +19,8 @@ public sealed record PlaylistDocument(PlaylistFormat Format, string RawText, str
 
 public static class PlaylistCodec
 {
+    public const int MaxTracks = 200000;
+    public const int MaxXmlDepth = 64;
     public static string Extension(PlaylistFormat format) => "." + format.ToString().ToLowerInvariant();
     public static PlaylistFormat Detect(string path) => Path.GetExtension(path).ToLowerInvariant() switch
     {
@@ -89,9 +91,8 @@ public static class PlaylistCodec
         var containerName = format == PlaylistFormat.XSPF ? "trackList" : "seq";
         var container = xml.Descendants().FirstOrDefault(e => e.Name.LocalName == containerName)
             ?? throw new InvalidDataException(Text.T("XmlStructure"));
-        container.Elements().Where(e => e.Name.LocalName == (format == PlaylistFormat.XSPF ? "track" : "media")).Remove();
         var preserveBase = format == PlaylistFormat.XSPF && sameFormat && document?.SourcePath != null &&
-            (xml.Descendants().Attributes(XNamespace.Xml + "base").Any() ||
+            (xml.Descendants().Attributes(XNamespace.Xml + "base").Any() || tracks.Any(t => t.SourceXml?.DescendantsAndSelf().Attributes(XNamespace.Xml + "base").Any() == true) ||
              !string.Equals(Path.GetDirectoryName(document.SourcePath), Path.GetDirectoryName(Path.GetFullPath(destination)), StringComparison.OrdinalIgnoreCase));
         if (preserveBase)
         {
@@ -104,6 +105,7 @@ public static class PlaylistCodec
                 attr.Value = new Uri(parentBase == null ? originalBase : new Uri(parentBase), attr.Value).AbsoluteUri;
             }
         }
+        container.Elements().Where(e => e.Name.LocalName == (format == PlaylistFormat.XSPF ? "track" : "media")).Remove();
         foreach (var t in tracks)
         {
             token.ThrowIfCancellationRequested();
@@ -133,10 +135,10 @@ public static class PlaylistCodec
 
     public static IReadOnlyList<Track> Read(string path) => ReadDocument(path).Tracks;
 
-    public static PlaylistDocument ReadDocument(string path, CancellationToken token = default)
+    public static PlaylistDocument ReadDocument(string path, CancellationToken token = default, PlaylistFormat? formatOverride = null)
     {
         path = Path.GetFullPath(path);
-        var format = Detect(path);
+        var format = formatOverride ?? Detect(path);
         using var stream = File.OpenRead(path);
         if (stream.Length > 32 * 1024 * 1024) throw new InvalidDataException(Text.T("T128"));
         var bytes = new byte[checked((int)stream.Length)];
@@ -160,6 +162,7 @@ public static class PlaylistCodec
             text = Encoding.GetEncoding(1250).GetString(bytes); encoding = "windows-1250";
         }
         var tracks = new List<Track>(); var warnings = new List<string>(); var preamble = new List<string>();
+        void AddTrack(Track track) { if (tracks.Count >= MaxTracks) throw new InvalidDataException("Playlist limit: 200000 tracks"); tracks.Add(track); }
         var globals = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         Track? Resolve(string location, XElement? element = null)
         {
@@ -188,7 +191,8 @@ public static class PlaylistCodec
         if (format is PlaylistFormat.M3U or PlaylistFormat.M3U8)
         {
             var pending = new List<string>(); string? info = null, title = null; double? duration = null;
-            foreach (var raw in text.Split('\n'))
+            using var lines = new StringReader(text);
+            while (lines.ReadLine() is { } raw)
             {
                 token.ThrowIfCancellationRequested();
                 var line = raw.Trim();
@@ -204,7 +208,7 @@ public static class PlaylistCodec
                 if (Resolve(line) is { } track)
                 {
                     track.Title = title; track.DurationSeconds = duration; track.ExtendedInfo = info;
-                    track.ExtraLines = [.. pending]; tracks.Add(track);
+                    track.ExtraLines = [.. pending]; AddTrack(track);
                 }
                 pending.Clear(); title = info = null; duration = null;
             }
@@ -213,7 +217,8 @@ public static class PlaylistCodec
         else if (format == PlaylistFormat.PLS)
         {
             var entries = new SortedDictionary<int, Dictionary<string, string>>();
-            foreach (var raw in text.Split('\n'))
+            using var lines = new StringReader(text);
+            while (lines.ReadLine() is { } raw)
             {
                 token.ThrowIfCancellationRequested();
                 var equal = raw.IndexOf('='); if (equal < 1) continue;
@@ -222,7 +227,7 @@ public static class PlaylistCodec
                 var match = Regex.Match(key, @"^(.+?)([0-9]+)$");
                 if (!match.Success) { globals[key] = value; continue; }
                 if (!int.TryParse(match.Groups[2].Value, out var number)) { warnings.Add(key); continue; }
-                if (!entries.TryGetValue(number, out var fields)) entries[number] = fields = new(StringComparer.OrdinalIgnoreCase);
+                if (!entries.TryGetValue(number, out var fields)) { if (entries.Count >= MaxTracks) throw new InvalidDataException("Playlist limit: 200000 tracks"); entries[number] = fields = new(StringComparer.OrdinalIgnoreCase); }
                 fields[match.Groups[1].Value] = value;
             }
             foreach (var fields in entries.Values)
@@ -231,33 +236,40 @@ public static class PlaylistCodec
                     track.Title = fields.GetValueOrDefault("Title"); track.DurationSeconds = Duration(fields.GetValueOrDefault("Length"));
                     track.ExtraFields = fields.Where(p => !new[] { "File", "Title", "Length" }.Contains(p.Key, StringComparer.OrdinalIgnoreCase))
                         .ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-                    tracks.Add(track);
+                    AddTrack(track);
                 }
         }
         else
         {
+            using (var preflight = XmlReader.Create(new StringReader(text), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 32 * 1024 * 1024 }))
+            {
+                int nodes = 0, entries = 0;
+                while (preflight.Read()) { token.ThrowIfCancellationRequested(); if (preflight.Depth > MaxXmlDepth || ++nodes > 2000000) throw new InvalidDataException("XML resource limit"); if (preflight.NodeType == XmlNodeType.Element && preflight.LocalName == (format == PlaylistFormat.XSPF ? "track" : "media") && ++entries > MaxTracks) throw new InvalidDataException("Playlist limit: 200000 tracks"); }
+            }
             using var reader = XmlReader.Create(new StringReader(text), new XmlReaderSettings
             { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 32 * 1024 * 1024 });
             xml = XDocument.Load(reader);
+            if (xml.Root?.Name.LocalName != (format == PlaylistFormat.XSPF ? "playlist" : "smil") || !xml.Descendants().Any(e => e.Name.LocalName == (format == PlaylistFormat.XSPF ? "trackList" : "seq"))) throw new InvalidDataException("Invalid playlist XML structure");
             var entryName = format == PlaylistFormat.XSPF ? "track" : "media";
             foreach (var item in xml.Descendants().Where(e => e.Name.LocalName == entryName))
             {
                 token.ThrowIfCancellationRequested();
                 string? Value(string name) => item.Elements().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
-                var location = format == PlaylistFormat.XSPF ? Value("location") : (string?)item.Attribute("src");
-                if (string.IsNullOrWhiteSpace(location) || Resolve(location, item) is not { } track) continue;
+                var locationElement = item.Elements().FirstOrDefault(e => e.Name.LocalName == "location");
+                var location = format == PlaylistFormat.XSPF ? locationElement?.Value : (string?)item.Attribute("src");
+                if (string.IsNullOrWhiteSpace(location) || Resolve(location, locationElement ?? item) is not { } track) continue;
                 track.SourceXml = new(item);
                 track.Title = Value("title"); track.Artist = Value("creator"); track.AlbumTitle = Value("album");
                 if (int.TryParse(Value("trackNum"), out var num)) track.TrackNumber = num;
                 track.DurationSeconds = Duration(Value("duration"), 1000);
-                tracks.Add(track);
+                AddTrack(track);
             }
         }
         return new(format, text, encoding, tracks) { SourcePath = path, XmlTemplate = xml, Globals = globals, Preamble = preamble, Warnings = warnings };
     }
 
     public static void Save(string path, IEnumerable<Track> tracks, PlaylistFormat format, bool relative, bool overwrite = false,
-        PlaylistDocument? document = null, CancellationToken token = default, string? backupPath = null)
+        PlaylistDocument? document = null, CancellationToken token = default, string? backupPath = null, string encodingName = "utf-8")
     {
         path = Path.GetFullPath(path);
         if (!string.Equals(Path.GetExtension(path), Extension(format), StringComparison.OrdinalIgnoreCase))
@@ -267,7 +279,7 @@ public static class PlaylistCodec
         var temp = Path.Combine(Path.GetDirectoryName(path)!, $".listy-{Guid.NewGuid():N}.tmp");
         try
         {
-            File.WriteAllText(temp, text, new UTF8Encoding(false));
+            File.WriteAllText(temp, text, PlayerProfile.GetEncoding(format == PlaylistFormat.M3U ? encodingName : "utf-8"));
             token.ThrowIfCancellationRequested();
             if (overwrite && backupPath != null && File.Exists(path)) File.Replace(temp, path, backupPath);
             else File.Move(temp, path, overwrite);

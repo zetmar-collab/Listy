@@ -6,6 +6,14 @@ Lokalna aplikacja Windows do automatycznego i ręcznego tworzenia playlist. **Po
 
 ![Przykładowe okno Listy](docs/images/listy.png)
 
+## Nowości w 1.3.0
+
+Przywracanie kopii, różnice przed aktualizacją, profile odtwarzaczy, zapisane reguły, przyrostowy odczyt metadanych, raport identycznych plików, ZIP z muzyką i 30-sekundowy odsłuch. [Instrukcja narzędzi](docs/TOOLS.md).
+
+## Wersja Android
+
+Natywna wersja Android znajduje się w [android/](android/README.md). Obsługuje wybór folderu i podkatalogów przez systemowe uprawnienia SAF, pięć formatów playlist, edytor i interfejs PL/EN. Budowanie APK: `scripts/Build-Android.ps1`. Wymagany Android 8.0 lub nowszy; szczegóły zgodności ścieżek i importu opisano w instrukcji Androida.
+
 ## Uruchomienie
 
 Pobierz i otwórz **Listy.exe**. Wersja przenośna Windows x64 zawiera środowisko .NET, nie wymaga instalatora, konta ani serwera. Pierwszy start rozpakowuje biblioteki do katalogu tymczasowego .NET. EXE nie ma podpisu cyfrowego.
@@ -88,7 +96,7 @@ Wymagane: Windows, .NET SDK 8 lub nowszy oraz dostęp do NuGet przy pierwszym pr
 .\scripts\Build.ps1 -Portable
 ~~~
 
-Skrypt uruchamia 72 testy logiki/integracji i 6 testów okna WPF. Artefakty robocze trafiają do .build, więc budowanie nie wymaga zamykania uruchomionej wersji deweloperskiej. Wersja przenośna powstaje w **Program/Listy.exe**, razem z SHA256SUMS.txt i informacją o licencji biblioteki. GitHub Actions wykonuje testy przy pushu i pull requestach.
+Skrypt uruchamia 83 testy logiki/integracji i 9 testów okna WPF. Artefakty robocze trafiają do .build, więc budowanie nie wymaga zamykania uruchomionej wersji deweloperskiej. Wersja przenośna powstaje w **Program/Listy.exe**, razem z SHA256SUMS.txt i informacją o licencji biblioteki. GitHub Actions wykonuje testy przy pushu i pull requestach.
 
 Przykładowa muzyka zawiera pięć syntetycznych plików WAV i testowe listy. Generator: **python scripts/CreateDemo.py**. Nie są to komercyjne nagrania.
 

@@ -6,6 +6,14 @@ Local Windows playlist creation and editing. **Polski / English** · [Polska dok
 
 ![Example Listy window](docs/images/listy.png)
 
+## New in 1.3.0
+
+Backups and restoration, changes before updates, player profiles, saved smart rules, incremental metadata reading, identical-file reports, portable music ZIPs and 30-second previews. [Tools guide](docs/TOOLS.en.md).
+
+## Android version
+
+A native Android edition is available in [android/](android/README.md). It supports folder/subfolder access through SAF, five playlist formats, manual editing and Polish/English UI. Build the APK with `scripts/Build-Android.ps1`. Requires Android 8.0 or later; the Android guide explains path compatibility and import limitations.
+
 ## Getting started
 
 Download and run **Listy.exe**. The portable Windows x64 build includes .NET and requires no installer, account or server. The executable is unsigned. Verify it against SHA256SUMS.txt using:
@@ -82,7 +90,7 @@ Requires Windows and .NET SDK 8 or newer. NuGet restores ATL.NET 7.19.0 (MIT).
 .\scripts\Build.ps1 -Portable
 ~~~
 
-The script runs 72 core/integration tests and 6 WPF window tests. Working output goes to .build, independently of a running development build. Portable output goes to **Program/Listy.exe**, with checksums and license notices. GitHub Actions runs the tests on pushes and pull requests.
+The script runs 83 core/integration tests and 9 WPF window tests. Working output goes to .build, independently of a running development build. Portable output goes to **Program/Listy.exe**, with checksums and license notices. GitHub Actions runs the tests on pushes and pull requests.
 
 The sample library contains synthetic WAV tones, not commercial recordings.
 

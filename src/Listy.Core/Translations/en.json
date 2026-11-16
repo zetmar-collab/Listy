@@ -191,5 +191,6 @@
   "ExistingHint": "Existing files: handled by the selected policy.",
   "ReadTagsHint": "Applies to the next scan and added files. Use “Read tags” for the open editor.",
   "Order": "Order",
-  "About": "About / licenses"
+  "About": "About / licenses",
+  "StudioTools": "Tools"
 }

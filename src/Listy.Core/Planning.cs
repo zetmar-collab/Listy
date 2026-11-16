@@ -4,10 +4,11 @@ public enum OutputMode { PerAlbum, Root, Subfolder }
 public record PlaylistPlan(string Path, IReadOnlyList<Track> Tracks)
 {
     public ExistingPlaylistPolicy Policy { get; init; }
+    public bool ExistsAtScan { get; init; }
     public string Name => System.IO.Path.GetFileName(Path);
     public string Folder => System.IO.Path.GetDirectoryName(Path) ?? "";
     public int Count => Tracks.Count;
-    public string State => File.Exists(Path) ? Text.T(Policy switch { ExistingPlaylistPolicy.UpdateWithBackup => "UpdateBackup", ExistingPlaylistPolicy.NewVersion => "VersionNew", _ => "T122" }) : Text.T("T099");
+    public string State => ExistsAtScan ? Text.T(Policy switch { ExistingPlaylistPolicy.UpdateWithBackup => "UpdateBackup", ExistingPlaylistPolicy.NewVersion => "VersionNew", _ => "T122" }) : Text.T("T099");
 }
 
 public static class PlaylistPlanner
@@ -32,6 +33,8 @@ public static class PlaylistPlanner
     {
         if (mode != OutputMode.PerAlbum) ValidateName(name);
         if (mode == OutputMode.Subfolder) ValidateName(subfolder);
+        var existing = library.Playlists.Select(p => p.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        PlaylistPlan Plan(string path, IReadOnlyList<Track> tracks) => new(path, tracks) { ExistsAtScan = existing.Contains(path) };
         var filtered = library.Albums.Where(a => a.IsSelected).Select(a => new Album(a.Directory,
             a.Tracks.Where(t => extensions.Contains(Path.GetExtension(t.Location).ToLowerInvariant())).ToArray())).Where(a => a.Tracks.Count > 0).ToArray();
         if (mode == OutputMode.PerAlbum)
@@ -39,7 +42,7 @@ public static class PlaylistPlanner
             var plans = new List<PlaylistPlan>(); var warnings = new List<string>();
             foreach (var a in filtered)
             {
-                try { ValidateName(a.Name); plans.Add(new(Path.Combine(a.Directory, a.Name + PlaylistCodec.Extension(format)), a.Tracks)); }
+                try { ValidateName(a.Name); plans.Add(Plan(Path.Combine(a.Directory, a.Name + PlaylistCodec.Extension(format)), a.Tracks)); }
                 catch (ArgumentException ex) { warnings.Add(a.Directory + ": " + ex.Message); }
             }
             return new(plans, warnings);
@@ -47,7 +50,7 @@ public static class PlaylistPlanner
         var tracks = filtered.SelectMany(a => a.Tracks).ToArray();
         if (tracks.Length == 0) return new([], []);
         var folder = mode == OutputMode.Subfolder ? Path.Combine(library.Root, subfolder) : library.Root;
-        return new([new(Path.Combine(folder, name + PlaylistCodec.Extension(format)), tracks)], []);
+        return new([Plan(Path.Combine(folder, name + PlaylistCodec.Extension(format)), tracks)], []);
     }
 
     public static string Rename(string path, string name)

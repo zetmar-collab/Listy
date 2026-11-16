@@ -191,5 +191,6 @@
   "ExistingHint": "Istniejące pliki: zgodnie z wybranym trybem.",
   "ReadTagsHint": "Dotyczy następnego skanowania i dodawania plików. Dla otwartego edytora użyj „Odczytaj tagi”.",
   "Order": "Kolejność",
-  "About": "Informacje / licencje"
+  "About": "Informacje / licencje",
+  "StudioTools": "Narzędzia"
 }

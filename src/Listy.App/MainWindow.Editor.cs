@@ -210,10 +210,11 @@ public partial class MainWindow
             !(format is PlaylistFormat.M3U or PlaylistFormat.M3U8 && _document.Format is PlaylistFormat.M3U or PlaylistFormat.M3U8) &&
             !Confirm(Text.T("ConversionWarning"), Text.T("T103"))) return false;
         var tracks = _tracks.ToArray(); var relative = EditorRelative.IsChecked == true; var document = _document;
+        if (!await ConfirmChanges(target, tracks)) return false;
         var result = await Work("T081", (token, _) =>
         {
             PlaylistPlanner.ValidateName(Path.GetFileNameWithoutExtension(target));
-            var output = PlaylistWriter.Write(target, tracks, format, relative, ExistingPlaylistPolicy.UpdateWithBackup, document, token);
+            var output = PlaylistWriter.Write(target, tracks, format, relative, ExistingPlaylistPolicy.UpdateWithBackup, document, token, _editorEncoding);
             return new SaveResult(output, PlaylistCodec.ReadDocument(output.Path));
         });
         if (result == null) return false;

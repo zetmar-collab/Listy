@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap rescap">
+  <Identity Name="MarekZettel-zetmar.Studioplaylist" Publisher="CN=15A53D32-C868-48EE-B700-5DBB5449CA1B" Version="1.3.0.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Studio playlist</DisplayName>
+    <PublisherDisplayName>Marek Zettel - zetmar</PublisherDisplayName>
+    <Description>Listy — studio playlist / playlist studio</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Resources>
+    <Resource Language="pl-PL" />
+    <Resource Language="en-US" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  <Applications>
+    <Application Id="Listy" Executable="App\Listy.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Studio playlist" Description="Listy — studio playlist / playlist studio"
+                         Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" BackgroundColor="transparent">
+        <uap:DefaultTile ShortName="Studio playlist" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
